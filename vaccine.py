@@ -27,16 +27,20 @@ def lambda_handler(event, context):
         
     for item in vaccine["centers"]:
         for session in item["sessions"]:
+            pin = str(item["pincode"])
+            print(pin)
+            print(type(pin))
             if session["min_age_limit"] == 18 and session["available_capacity"] > 0:
                 data_to_return =  item["name"] + ' - ' + item["address"] + ' - ' + str(item["pincode"]) + ' - ' + session["date"] + ' - ' + str(session["available_capacity"])
-                final_response = final_response + "\n" + data_to_return
-                
-                #Send email through SNS
-                response = client.publish(
-                TopicArn=YOUR_SNS_TOPIC_ARN, Message= final_response, Subject='Vaccine slots opened')
+                final_response = final_response + "\n" + data_to_return      
             else:
-                exit()
-    
+                continue
+    #For sending emails through AWS SNS
+    if final_response != '':
+        response = client.publish(
+                TopicArn=YOUR_TOPIC_ARN, Message= final_response, Subject='Vaccine slots opened')
+    else:
+        exit()
     return response     
 
 
