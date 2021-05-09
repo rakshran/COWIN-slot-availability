@@ -13,8 +13,9 @@ def lambda_handler(event, context):
     conn = http.client.HTTPSConnection("cdn-api.co-vin.in")
     payload = ''
     headers = {}
+    
+    #The district id can be obtained using the GET states and GET list of disricts end-point - refer ~ https://apisetu.gov.in/public/marketplace/api/cowin/
     url = '/api/v2/appointment/sessions/public/calendarByDistrict?district_id=YOUR_DISTRICT_ID&date='+str(today)
-    print(url)
     conn.request("GET", url, payload, headers)
     res = conn.getresponse()
     data = res.read()
@@ -27,9 +28,10 @@ def lambda_handler(event, context):
     for item in vaccine["centers"]:
         for session in item["sessions"]:
             if session["min_age_limit"] == 18 and session["available_capacity"] > 0:
-            #if session["min_age_limit"] == 18:
                 data_to_return =  item["name"] + ' - ' + item["address"] + ' - ' + str(item["pincode"]) + ' - ' + session["date"] + ' - ' + str(session["available_capacity"])
                 final_response = final_response + "\n" + data_to_return
+                
+                #Send email through SNS
                 response = client.publish(
                 TopicArn=YOUR_SNS_TOPIC_ARN, Message= final_response, Subject='Vaccine slots opened')
             else:
